@@ -1,0 +1,17 @@
+#CDR Info fields define
+
+msisdn       = "servedMSISDN.*?value: 0x(\d+)f"
+imsi         = "servedIMSI.*?value: 0x(\d+)f"
+imei         = "servedIMEI.*?value: (0x\d+)"
+sgsnAddr     = "sgsnAddress.*?iPTextV4Address.*?value: (\d+.\d+.\d+.\d+)"
+rai          = "routingArea.*?value: 0x(\d+)"
+lai          = "locationAreaCode.*?value: 0x([a-f0-9]+)"
+cellID       = "cellIdentifier.*?value: 0x([a-f0-9]+)"
+chargingID   = "chargingID.*?value: (\d+)"
+chargingChar = "chargingCharacteristics.*?value: 0x(\d+)"
+ggsnAddr     = "ggsnAddressUsed.*?iPTextV4Address.*?value: (\d+.\d+.\d+.\d+)"
+pdpAddr      = "servedPDPAddress.*?iPTextV4Address.*?value: (\d+.\d+.\d+.\d+)"
+apn          = "accessPointNameNI.*?value: (\w+)"
+
+
+#default fields for CDR export to csv
