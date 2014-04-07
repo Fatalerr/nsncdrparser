@@ -7,16 +7,18 @@ CDR file.
 
 by Liu Jun, 2014/3/25. Contact:jun1.liu@nsn.com
 """
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __description__ = ""
-__date__ = "2014/4/5"
+__date__ = "2014/4/6"
  
 import re,binascii
 import sys
 
 CDR_OUTPUT_FORMAT = "cid:%(chargingID)s,nodeID:%(nodeID)s,FCI:%(FCI)s, cc:%(chargingChar)s"
-DEFAULT_CDR_FIELDS = ['fci','apn','rat','nodeID']
+DEFAULT_SACDR_FIELDS = ['fci','apn','rat','nodeID']
+DEFAULT_SCDR_FIELDS = ['chargingID','apn','sgsnAddr']
 
+## common data handling
 def load_patterns_from_file(fp):
     """read the CDR fields's patterns from file and compile them to RE object"""
     patterns = {}
@@ -29,34 +31,61 @@ def load_patterns_from_file(fp):
         
     return patterns
 
+def _keyvalue2dict(kvlist):
+    "transformat the 'key=value' string to a dictionary"
+    if not kvlist:
+        return {} 
+    else:
+        return dict((s.split('=') for s in kvlist))
+
 def swap_char(rstr):
     """swap two char in the string"""
-    s0=[rstr[i] for i in xrange(0,len(rstr),2)]
-    s1=[rstr[i] for i in xrange(1,len(rstr),2)]
-    return ''.join([a+b for a,b in zip(s1,s0)])
+    slen=len(rstr)
+    s0=(rstr[i] for i in xrange(0,slen,2))
+    s1=(rstr[i] for i in xrange(1,slen,2))
+    return ''.join((''.join(v) for v in zip(s1,s0)))
+
+def _trans_locationinfo(data):
+	return swap_char(binascii.a2b_hex(data))
+
+def _trans_fci(data):
+	return binascii.a2b_hex(data)
+
+TRANSFORM_METHODS={
+	'locationInfo':_trans_locationinfo,
+	'fci': _trans_fci,
+	'imeisv':swap_char,
+}
 
 def string_trans_hex(data,key):
     """transformat some hex string to human readable.
     """
-    data = ','.join(data)
+    data = ','.join(data)  #data is a list.
+    #return data
+    
+    if key not in TRANSFORM_METHODS.keys():
+    	return data
+    else:
+    	return TRANSFORM_METHODS[key](data)
 
-    if key in ['locationInfo']:
-        data = swap_char(binascii.a2b_hex(data[2:]))
-    elif key in ['fci']:
-        data = binascii.a2b_hex(data[2:])
-    elif data.startswith('0x'):
-        data = swap_char(data[2:])
-    return data    
+    # if key in ['locationInfo']:
+    #     data = swap_char(binascii.a2b_hex(data[2:]))
+    # elif key in ['fci']:
+    #     data = binascii.a2b_hex(data[2:])
+    # elif data.startswith('0x'):
+    #     data = swap_char(data[2:])
+    # return data    
     
 class CDR(object):
     """Class store and handle CDR data
     """
     _outputformat = "%(chargingID)s,%(msisdn)s,%(imsi)s,%(chargingChar)s"
+    default_cdr_fields = None
     def __init__(self):
         self._info = {}
     
     def set_output_format(self,format):
-        CDR._outputformat = format
+        self._outputformat = format
         
     def parse(self,cdrlines,patterns):
         text = ''.join(cdrlines)
@@ -83,17 +112,16 @@ class CDR(object):
         return result
             
     def __repr__(self):
-        return CDR._outputformat % (self._info)
+        return self._outputformat % (self._info)
         
 
 class SaCDR(CDR):
-    pass
+    "class handle the SA-CDR"
+    default_cdr_fields = DEFAULT_SACDR_FIELDS
 
-def _keyvalue2dict(kvlist):
-    if not kvlist:
-        return {} 
-    else:
-        return dict((s.split('=') for s in kvlist))
+class SCDR(CDR):
+    "class handle the S-CDR"
+    default_cdr_fields = DEFAULT_SCDR_FIELDS
      
 def parse_cdrtext(in_stream,p_patterns,s_patterns=[]):
     """read and parse the CDR text from input_stream (file or stdin)
@@ -120,15 +148,19 @@ def parse_cdrtext(in_stream,p_patterns,s_patterns=[]):
     return cdrs,filtered_cdr_text
        
 def count(key,result):
-    if key in result:
+    try:
         result[key] +=1
-    else:
+    except KeyError:
         result[key] = 1
+    
     return result
+    
 
 def print_cdr_stats(cdrs,fields):                       
     """Print the statistic of CDR"""
     stats = {}
+    if not fields:
+        fields = cdrs[0].default_cdr_fields
     for f in fields:
         stats[f] = {}
 
@@ -176,21 +208,10 @@ def args_parse():
                         help="specify the CDR field's pattern file for parsing ")
                         
     return parser.parse_args()
-    
-if __name__ == "__main__":  
-    import argparse
-    from time import time
-    
-    args = args_parse()
-    
-    parse_patterns = load_patterns_from_file(args.patterns_file)
-    cdr_file = args.cdr_file
-    
-    print "Start to parse the CDR file using patterns file:<%s>" % args.patterns_file.name
-    start_time = time()
-    
+
+def main(args):
     if hasattr(args,'search_patterns'):
-        _fields = DEFAULT_CDR_FIELDS
+        #_fields = DEFAULT_CDR_FIELDS
         #start to parse
         allcdrs,cdrs_text = parse_cdrtext(cdr_file,parse_patterns,args.search_patterns)
         end_time = time()
@@ -203,7 +224,7 @@ if __name__ == "__main__":
             args.found_output.close()
             
     elif hasattr(args,'stats_fields'):
-        _fields = args.stats_fields or DEFAULT_CDR_FIELDS
+        _fields = args.stats_fields
         #start to parse
         allcdrs,cdrs_text = parse_cdrtext(cdr_file,parse_patterns)
         end_time = time()
@@ -216,6 +237,20 @@ if __name__ == "__main__":
         end_time = time()        
         output_cdr(args.output,allcdrs,_fields)
 
+    return end_time
+
+if __name__ == "__main__":  
+    import argparse
+    from time import time
+    
+    args = args_parse()
+    
+    parse_patterns = load_patterns_from_file(args.patterns_file)
+    cdr_file = args.cdr_file
+    
+    print "Start to parse the CDR file using patterns file:<%s>" % args.patterns_file.name
+    start_time = time()
+
+    end_time = main(args)
+    
     print "\nparsing/caculating time: %.5f/%.5f" % (end_time-start_time,time()-end_time)
-        
-        
