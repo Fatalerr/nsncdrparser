@@ -1,6 +1,10 @@
-#CDR Type define: SaCDR or SCDR
+#CDR Type define: "SaCDR" or "SCDR". 
 CdrType="SaCDR"
+
+#default display fields of CDR stats
 DefaultFields=['nodeID','fci','apn','rat','sgsnAddr']
+
+#limit the maxinum display items in stats output
 MaxDisplayItems = 10
 
 #CDR Info fields define

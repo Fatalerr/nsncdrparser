@@ -210,8 +210,10 @@ def args_parse():
     parser.add_argument('-p','--patterns_file',type=file,default="sacdr.patterns",
                         help="specify the CDR field's pattern file for parsing ")
     parser.add_argument('-l','--output_level',action='store', default='info',
-                        help="specify output message level")                             
-    
+                        help="specify output message level")                            
+    parser.add_argument('-m','--max_disp_items',action='store',default=5,
+                        help="set the maxinum display/output items")
+                        
     return parser.parse_args()
 
 def main(args):
@@ -266,7 +268,10 @@ if __name__ == "__main__":
     for field,patternstr in cdrinfo.Patterns.items():
         cdrinfo.Patterns[field]=re.compile(patternstr,re.DOTALL)
     debug.debug(cdrinfo.getall())
-    
+
+    if args.max_disp_items:
+        cdrinfo.MaxDisplayItems = int(args.max_disp_items)
+        
     cdr_file = args.cdr_file
     
     if hasattr(args,'silent'):
