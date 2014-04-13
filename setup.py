@@ -1,9 +1,8 @@
 from cx_Freeze import setup, Executable
-from nsncdrparser import __version__
+from nsncdrparser import __version__,__description__,__author__
 
 # Dependencies are automatically detected, but it might need
 # fine tuning.
-
 
 base = 'Console'
 included_files = ['sacdr.patterns','scdr.patterns']
@@ -16,6 +15,7 @@ executables = [
 
 setup(name='nsncdrparser',
       version = __version__,
-      description = 'A tool can parse and search NSN CDR file',
+      description = __description__,
+      author = __author__,
       options = dict(build_exe = buildOptions),
       executables = executables)
