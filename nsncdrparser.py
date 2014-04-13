@@ -150,11 +150,18 @@ def print_cdr_stats(cdrs,fields):
     """Print the statistic of CDR"""
     stats_cdr_format = "\n---CDR stats---\nTotal CDR:%10d"
     stats_sub_header_format = "\n---'%s' stats---"
+    
+    max_col = 40
+    
     try:
         max_display_items = cdrinfo.MaxDisplayItems
     except:
         max_display_items = 5
     
+    sort_order = True
+    if max_display_items <0:
+        max_display_items = abs(max_display_items)
+        sort_order = False
     stats = {}
     if not fields:
         try:
@@ -173,12 +180,15 @@ def print_cdr_stats(cdrs,fields):
     print stats_cdr_format % len(cdrs)
     for f in fields:
         print stats_sub_header_format % f
-        _stats_sorted = sorted(stats[f].items(),key=lambda d:d[1],reverse=True)
+        _stats_sorted = sorted(stats[f].items(),key=lambda d:d[1],reverse=sort_order)
+        if f in ['serviceCode']:
+            max_col = 60
         for k,v in _stats_sorted[:max_display_items]:
-            print "%s=%s:%10d" % (f,k,v)
+            kvstr="%s=%s" %(f,k)
+            print kvstr,str(v).rjust(max_col-len(kvstr))
         if len(_stats_sorted) > max_display_items:
-            print "Total %s were found, Only %s items were displayed" % \
-                    (len(_stats_sorted),max_display_items)
+            print "...\nOnly %s of %s items were displayed" % \
+                    (max_display_items,len(_stats_sorted))
 
 def output_cdr(ostream,cdrs,export_fields):
     header = ','.join(export_fields) + "\n"

@@ -2,7 +2,7 @@
 CdrType="SaCDR"
 
 #default display fields of CDR stats
-DefaultFields=['nodeID','fci','apn','rat','sgsnAddr']
+DefaultFields=['nodeID','fci','apn','rat','sgsnPLMN','sgsnAddr','msisdn','causeClosing','serviceCode']
 
 #limit the maxinum display items in stats output
 MaxDisplayItems = 10
