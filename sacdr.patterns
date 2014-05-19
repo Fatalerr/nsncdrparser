@@ -5,7 +5,7 @@ CdrType="SaCDR"
 DefaultFields=['nodeID','fci','apn','rat','sgsnPLMN','sgsnAddr','msisdn','causeClosing','serviceCode']
 
 #limit the maxinum display items in stats output
-MaxDisplayItems = 10
+DisplayItems = 6
 
 #CDR Info fields define
 Patterns = dict(
@@ -30,3 +30,5 @@ serviceCode     = "serviceCode.*?value: (\d+)",
 gprsUplinkVol   = "dataVolumeGPRSUplink.*?value: (\d+)",
 gprsDownlinkVol = "dataVolumeGPRSDownlink.*?value: (\d+)",
 )
+
+MultiMatches = ['serviceCode']

@@ -17,9 +17,15 @@ class ConfigObject(object):
         """return a dict include all configuration"""
         return self.__dict__
     
+    def items(self):
+        return self.__dict__.items()
+        
     def get(self,key,notfound=None):
         """return the value for 'key' or notfound if key not exist"""
         return self.__dict__.get(key,notfound)
+    def __repr__(self):
+        import pprint
+        return pprint.pformat(self.__dict__)
         
 #### or 
 #conf = {} or class conf:pass
